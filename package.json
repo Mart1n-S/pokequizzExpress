@@ -1,7 +1,7 @@
 {
   "name": "pokequizz",
   "version": "1.0.0",
-  "description": "PokéQuiz - jeu de rapidité basé sur les Pokémon (Clean Architecture + TDD)",
+  "description": "PokéQuizz - jeu de rapidité basé sur les Pokémon (Clean Architecture + TDD)",
   "main": "dist/main.js",
   "scripts": {
     "dev": "nodemon --watch src --exec ts-node src/main.ts",
