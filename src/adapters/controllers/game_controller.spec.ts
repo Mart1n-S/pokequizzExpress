@@ -99,6 +99,19 @@ describe("GameController", () => {
         );
     });
 
+    it("doit soumettre une réponse valide et retourner le résultat", async () => {
+        request = {
+            body: {
+                game: { playerName: "Sacha", score: 0, lives: 3 },
+                currentPokemon: { id: 25, name: "pikachu", imageUrl: "img" },
+                playerAnswer: "pikachu",
+            },
+        };
+
+        await controller.submitAnswer(request as Request, response);
+        expect(response.status).toHaveBeenCalledWith(200);
+    });
+
     it("doit retourner les meilleurs scores", async () => {
         request = { query: {} };
         await controller.getHighScores(request as Request, response);

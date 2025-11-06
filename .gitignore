@@ -5,7 +5,7 @@ coverage/
 
 ## Environment
 .env
-.env.*
+.env.local
 
 ## Logs
 npm-debug.log*
