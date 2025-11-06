@@ -31,3 +31,5 @@ yarn.lock
 .cache/
 .nyc_output/
 
+# Brouillon de fichiers à ignorer
+brouillon.md
