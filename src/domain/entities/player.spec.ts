@@ -21,4 +21,17 @@ describe("Entité Player (Joueur)", () => {
         expect(() => new Player("")).toThrow("Le pseudo du joueur est obligatoire.");
 
     });
+
+    it("ne doit pas accepter un pseudo avec des chiffres ou caractères spéciaux", () => {
+        expect(() => new Player("Ash123")).toThrow();
+        expect(() => new Player("Sacha!")).toThrow();
+    });
+
+    it("ne doit pas accepter un pseudo avec des espaces", () => {
+        expect(() => new Player("Sacha Ketchum")).toThrow();
+    });
+
+    it("ne doit pas accepter un pseudo de plus de 15 caractères", () => {
+        expect(() => new Player("abcdefghijklmnop")).toThrow();
+    });
 });
