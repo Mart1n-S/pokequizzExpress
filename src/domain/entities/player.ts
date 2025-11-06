@@ -1,5 +1,5 @@
 /**
- * Entité représentant un joueur de PokéQuiz.
+ * Entité représentant un joueur de PokéQuizz.
  * 
  * Règles métier :
  * - Le pseudo est obligatoire
