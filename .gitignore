@@ -1,0 +1,33 @@
+## Node
+node_modules/
+dist/
+coverage/
+
+## Environment
+.env
+.env.*
+
+## Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## OS files
+.DS_Store
+Thumbs.db
+
+## Editor directories and files
+.vscode/
+.idea/
+
+## TypeScript
+*.tsbuildinfo
+
+## Packages
+package-lock.json
+yarn.lock
+
+## Misc
+.cache/
+.nyc_output/
+
