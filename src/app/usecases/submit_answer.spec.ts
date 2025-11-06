@@ -52,4 +52,17 @@ describe("Cas d’usage SubmitAnswer", () => {
         expect(result.lives).toBe(0);
         expect(result.isGameOver).toBe(true);
     });
+
+    it("doit fournir la bonne réponse quand le joueur se trompe", async () => {
+        const gateway = new FakePokemonGateway();
+        const game = new Game("Sacha");
+        const currentPokemon = new Pokemon(25, "pikachu", "url");
+
+        const useCase = new SubmitAnswer(gateway);
+        const result = await useCase.exec(game, currentPokemon, "Dracaufeu");
+
+        expect(result.correctAnswer).toBe("pikachu");
+        expect(result.currentPokemon.name).toBe("charmander");
+    });
+
 });
