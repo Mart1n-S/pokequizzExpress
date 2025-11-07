@@ -54,6 +54,9 @@ export default function StartForm() {
       <p className="text-gray-600 mb-6">
         Entrez votre pseudo pour commencer le PokéQuizz !
       </p>
+      <p className="text-sm text-yellow-700 bg-yellow-50 inline-block px-3 py-2 rounded mb-4">
+        Avertissement : les noms des Pokémon sont en anglais.
+      </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
         <label

@@ -42,6 +42,10 @@ export default function AnswerForm({ onSubmit }: AnswerFormProps) {
       onSubmit={handleSubmit}
       className="mt-6 flex flex-col items-center space-y-4 w-full max-w-sm"
     >
+      <p className="self-start text-sm text-yellow-700 bg-yellow-50 inline-block px-3 py-1 rounded mb-2">
+        Avertissement : les noms des Pokémon sont en anglais.
+      </p>
+
       <label
         htmlFor="answerInput"
         className="self-start text-sm font-medium text-gray-700"
