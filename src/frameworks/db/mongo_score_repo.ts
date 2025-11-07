@@ -3,28 +3,37 @@
  * Implémentation concrète du ScoreRepository utilisant MongoDB.
  *
  * Ce repository gère la persistance des scores des joueurs pour le PokéQuizz.
- * Contrairement à une approche avec authentification, ici chaque score est enregistré,
- * même si plusieurs entrées ont le même pseudo (mode arcade).
+ * Chaque partie sauvegarde une nouvelle entrée (mode arcade sans contrainte d’unicité).
  */
 
 import { Player } from "src/domain/entities/player";
 import { ScoreRepository } from "src/domain/ports/score_repository";
 import { PlayerModel } from "./models/player_model";
+import { AppError } from "src/domain/errors/AppError";
 
 export class MongoScoreRepository implements ScoreRepository {
     /**
      * Enregistre un nouveau score en base.
-     * Chaque partie crée une nouvelle entrée.
+     * Chaque partie crée une nouvelle entrée, même pour le même pseudo.
      */
     async saveScore(player: Player): Promise<void> {
         try {
+            if (!player?.name || typeof player.score !== "number") {
+                throw AppError.Validation("Les données du joueur sont invalides.");
+            }
+
             await PlayerModel.create({
                 name: player.name,
                 score: player.score,
             });
-        } catch (error) {
-            console.error("Erreur MongoDB (saveScore) :", error);
-            throw new Error("Impossible d'enregistrer le score dans MongoDB.");
+
+            console.log(`[MongoDB] Score enregistré pour ${player.name} (${player.score} pts)`);
+        } catch (error: any) {
+            console.error("[MongoScoreRepository] Erreur MongoDB (saveScore) :", error);
+
+            if (error instanceof AppError) throw error;
+
+            throw AppError.Server("Impossible d’enregistrer le score dans MongoDB.");
         }
     }
 
@@ -39,15 +48,25 @@ export class MongoScoreRepository implements ScoreRepository {
                 .limit(limit)
                 .lean();
 
-            // Conversion : on recrée les entités Player
-            return documents.map((doc) => {
+            if (!documents || documents.length === 0) {
+                throw AppError.NotFound("Aucun score trouvé en base de données.");
+            }
+
+            // Conversion : création des entités Player
+            const players = documents.map((doc) => {
                 const player = new Player(doc.name);
                 player.score = doc.score;
                 return player;
             });
-        } catch (error) {
-            console.error("Erreur MongoDB (getTopScores) :", error);
-            throw new Error("Impossible de récupérer les scores depuis MongoDB.");
+
+            console.log(`[MongoDB] ${players.length} scores chargés depuis la base.`);
+            return players;
+        } catch (error: any) {
+            console.error("[MongoScoreRepository] Erreur MongoDB (getTopScores) :", error);
+
+            if (error instanceof AppError) throw error;
+
+            throw AppError.Server("Impossible de récupérer les scores depuis MongoDB.");
         }
     }
 }

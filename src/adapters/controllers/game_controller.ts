@@ -7,10 +7,13 @@ import { PokemonGateway } from "src/domain/ports/pokemon_gateway";
 import { ScoreRepository } from "src/domain/ports/score_repository";
 import { Pokemon } from "src/domain/entities/pokemon";
 import { Game } from "src/domain/entities/game";
+import { AppError } from "src/domain/errors/AppError";
 
 /**
- * Contrôleur principal du jeu PokéQuizz.
- * Gère les requêtes HTTP et délègue la logique métier aux cas d’usage.
+ * Contrôleur principal du jeu PokéQuizz
+ *
+ * Gère les requêtes HTTP entrantes et délègue la logique métier aux cas d’usage.
+ * Toutes les erreurs sont capturées et converties en réponses HTTP uniformes.
  */
 export class GameController {
     private pokemonGateway: PokemonGateway;
@@ -22,31 +25,18 @@ export class GameController {
     }
 
     /**
-     * Méthode centralisée pour gérer les erreurs et leur traduction HTTP.
+     * Gestion centralisée des erreurs
+     * Traduit les erreurs applicatives en réponses HTTP propres et cohérentes.
      */
-    private handleError(response: Response, caughtError: any): void {
-        let statusCode = 500;
-        let message = "Erreur interne du serveur.";
-
-        if (caughtError instanceof Error) {
-            switch (caughtError.message) {
-                case "Le pseudo du joueur est obligatoire.":
-                case "Le pseudo doit contenir uniquement des lettres (A-Z, a-z) et ne pas dépasser 15 caractères.":
-                    statusCode = 400;
-                    message = caughtError.message;
-                    break;
-
-                case "Impossible de récupérer le Pokémon.":
-                    statusCode = 404;
-                    message = caughtError.message;
-                    break;
-
-                default:
-                    message = caughtError.message;
-            }
+    private handleError(response: Response, error: unknown): void {
+        if (error instanceof AppError) {
+            response.status(error.statusCode).json({ error: error.message });
+        } else if (error instanceof Error) {
+            console.error(`[UnexpectedError] ${error.message}`, error);
+            response.status(500).json({ error: "Erreur interne du serveur." });
+        } else {
+            response.status(500).json({ error: "Erreur inconnue." });
         }
-
-        response.status(statusCode).json({ error: message });
     }
 
     /**
@@ -55,11 +45,17 @@ export class GameController {
     async startGame(request: Request, response: Response): Promise<void> {
         try {
             const { playerName } = request.body;
+
+            if (!playerName) {
+                throw AppError.Validation("Le pseudo du joueur est obligatoire.");
+            }
+
             const useCase = new StartGame(this.pokemonGateway);
             const result = await useCase.exec(playerName);
+
             response.status(200).json(result);
-        } catch (caughtError: any) {
-            this.handleError(response, caughtError);
+        } catch (error) {
+            this.handleError(response, error);
         }
     }
 
@@ -70,6 +66,14 @@ export class GameController {
         try {
             const { game, currentPokemon, playerAnswer } = request.body;
 
+            if (!game || !game.playerName) {
+                throw AppError.Validation("Les informations de la partie sont manquantes.");
+            }
+
+            if (!currentPokemon) {
+                throw AppError.Validation("Aucun Pokémon courant fourni.");
+            }
+
             const gameEntity = Object.assign(new Game(game.playerName), game);
             const pokemonEntity = new Pokemon(
                 currentPokemon.id,
@@ -77,13 +81,12 @@ export class GameController {
                 currentPokemon.imageUrl
             );
 
-            // On injecte maintenant le scoreRepository
             const useCase = new SubmitAnswer(this.pokemonGateway, this.scoreRepository);
             const result = await useCase.exec(gameEntity, pokemonEntity, playerAnswer);
 
             response.status(200).json(result);
-        } catch (caughtError: any) {
-            this.handleError(response, caughtError);
+        } catch (error) {
+            this.handleError(response, error);
         }
     }
 
@@ -93,6 +96,7 @@ export class GameController {
     async getNewPokemon(request: Request, response: Response): Promise<void> {
         try {
             const { previousPokemon } = request.body;
+
             const previous =
                 previousPokemon &&
                 new Pokemon(previousPokemon.id, previousPokemon.name, previousPokemon.imageUrl);
@@ -101,8 +105,8 @@ export class GameController {
             const result = await useCase.exec(previous);
 
             response.status(200).json(result);
-        } catch (caughtError: any) {
-            this.handleError(response, caughtError);
+        } catch (error) {
+            this.handleError(response, error);
         }
     }
 
@@ -112,11 +116,13 @@ export class GameController {
     async getHighScores(request: Request, response: Response): Promise<void> {
         try {
             const limit = request.query.limit ? parseInt(request.query.limit as string, 10) : 10;
+
             const useCase = new GetHighScores(this.scoreRepository);
             const result = await useCase.exec(limit);
+
             response.status(200).json(result);
-        } catch (caughtError: any) {
-            this.handleError(response, caughtError);
+        } catch (error) {
+            this.handleError(response, error);
         }
     }
 }

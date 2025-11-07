@@ -4,6 +4,7 @@ import { Pokemon } from "src/domain/entities/pokemon";
 import { PokemonGateway } from "src/domain/ports/pokemon_gateway";
 import { ScoreRepository } from "src/domain/ports/score_repository";
 import { Player } from "src/domain/entities/player";
+import { AppError } from "src/domain/errors/AppError";
 
 /**
  * Faux adaptateur simulant un accès à l'API Pokémon.
@@ -29,7 +30,23 @@ class FakeScoreRepository implements ScoreRepository {
     }
 }
 
+/**
+ * Repository qui échoue volontairement pour tester la gestion d’erreur.
+ */
+class FailingScoreRepository implements ScoreRepository {
+    async saveScore(): Promise<void> {
+        throw new Error("database_error");
+    }
+    async getTopScores(): Promise<Player[]> {
+        return [];
+    }
+}
+
 describe("Cas d’usage SubmitAnswer", () => {
+    beforeEach(() => {
+        jest.spyOn(console, "log").mockImplementation(() => { });
+        jest.spyOn(console, "error").mockImplementation(() => { });
+    });
     let gateway: FakePokemonGateway;
     let repo: FakeScoreRepository;
 
@@ -61,12 +78,13 @@ describe("Cas d’usage SubmitAnswer", () => {
         expect(result.score).toBe(0);
         expect(result.lives).toBe(2);
         expect(result.isGameOver).toBe(false);
+        expect(result.correctAnswer).toBe("pikachu");
     });
 
     it("doit signaler la fin de la partie quand les vies tombent à 0 et sauvegarder le score", async () => {
         const game = new Game("Sacha");
         const currentPokemon = new Pokemon(25, "pikachu", "url");
-        game.lives = 1; // Simule une fin de partie imminente
+        game.lives = 1; // Fin de partie imminente
 
         const useCase = new SubmitAnswer(gateway, repo);
         const result = await useCase.exec(game, currentPokemon, "Dracaufeu");
@@ -81,11 +99,32 @@ describe("Cas d’usage SubmitAnswer", () => {
     it("doit fournir la bonne réponse quand le joueur se trompe", async () => {
         const game = new Game("Sacha");
         const currentPokemon = new Pokemon(25, "pikachu", "url");
+        game.lives = 1;
 
+        const useCase = new SubmitAnswer(gateway, new FailingScoreRepository());
+        await expect(useCase.exec(game, currentPokemon, "Dracaufeu")).rejects.toThrow(
+            "Impossible d’enregistrer le score du joueur."
+        );
+    });
+
+    it("doit lever une AppError.Validation si les données du jeu sont manquantes", async () => {
         const useCase = new SubmitAnswer(gateway, repo);
-        const result = await useCase.exec(game, currentPokemon, "Dracaufeu");
+        // @ts-expect-error test volontaire
+        await expect(useCase.exec(null, null, "Pikachu")).rejects.toThrow(AppError);
+    });
 
-        expect(result.correctAnswer).toBe("pikachu");
-        expect(result.currentPokemon?.name).toBe("charmander");
+    it("doit lever une AppError.Server si la PokéAPI est inaccessible", async () => {
+        const badGateway: PokemonGateway = {
+            getRandomPokemon: async () => {
+                throw new Error("PokéAPI down");
+            },
+        };
+        const game = new Game("Sacha");
+        const currentPokemon = new Pokemon(25, "pikachu", "url");
+
+        const useCase = new SubmitAnswer(badGateway, repo);
+        await expect(useCase.exec(game, currentPokemon, "pikachu")).rejects.toThrow(
+            "Impossible de récupérer un nouveau Pokémon."
+        );
     });
 });

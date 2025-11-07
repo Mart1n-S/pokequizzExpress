@@ -1,23 +1,21 @@
 /**
  * Tests d’intégration — MongoScoreRepository
  *
- * Ce test vérifie :
+ * Vérifie :
  *  - la sauvegarde correcte d’un score dans MongoDB,
- *  - la récupération des meilleurs scores triés par ordre décroissant.
- *
- * Il utilise mongodb-memory-server pour simuler une base MongoDB en mémoire,
- * ce qui permet d’exécuter les tests sans dépendre d’une vraie base distante.
+ *  - la récupération triée des meilleurs scores,
+ *  - la gestion d’erreurs cohérente avec AppError.
  */
 
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { MongoScoreRepository } from "./mongo_score_repo";
 import { Player } from "src/domain/entities/player";
+import { AppError } from "src/domain/errors/AppError";
 
 describe("MongoScoreRepository (MongoDB)", () => {
     let mongoServer: MongoMemoryServer;
     let repository: MongoScoreRepository;
-
     /**
      * Avant tous les tests :
      * - on démarre une instance MongoDB en mémoire
@@ -25,6 +23,9 @@ describe("MongoScoreRepository (MongoDB)", () => {
      * - on instancie le repository
      */
     beforeAll(async () => {
+        jest.spyOn(console, "error").mockImplementation(() => { });
+        jest.spyOn(console, "log").mockImplementation(() => { });
+
         mongoServer = await MongoMemoryServer.create();
         const uri = mongoServer.getUri();
         await mongoose.connect(uri);
@@ -50,6 +51,7 @@ describe("MongoScoreRepository (MongoDB)", () => {
     afterAll(async () => {
         await mongoose.disconnect();
         await mongoServer.stop();
+        jest.restoreAllMocks();
     });
 
     it("doit sauvegarder un score dans la base MongoDB", async () => {
@@ -91,8 +93,17 @@ describe("MongoScoreRepository (MongoDB)", () => {
         expect(topScores[2].score).toBe(10);
     });
 
-    it("doit renvoyer un tableau vide si aucun score n’est présent", async () => {
-        const topScores = await repository.getTopScores();
-        expect(topScores).toEqual([]);
+    it("doit lever AppError.NotFound s’il n’y a aucun score en base", async () => {
+        await expect(repository.getTopScores()).rejects.toThrow(AppError);
+        await expect(repository.getTopScores()).rejects.toThrow("Aucun score trouvé en base de données.");
+    });
+
+    it("doit lever AppError.Validation si les données du joueur sont invalides", async () => {
+        // @ts-expect-error test volontaire d’un cas invalide
+        await expect(repository.saveScore({ name: "", score: null })).rejects.toThrow(AppError);
+        // @ts-expect-error test volontaire d’un cas invalide
+        await expect(repository.saveScore({ name: "", score: null })).rejects.toThrow(
+            "Les données du joueur sont invalides."
+        );
     });
 });

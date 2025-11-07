@@ -1,6 +1,7 @@
 import { StartGame } from "./start_game";
 import { PokemonGateway } from "src/domain/ports/pokemon_gateway";
 import { Pokemon } from "src/domain/entities/pokemon";
+import { AppError } from "src/domain/errors/AppError";
 
 /**
  * Faux adaptateur simulant un accès à l'API Pokémon.
@@ -12,15 +13,20 @@ class FakePokemonGateway implements PokemonGateway {
     }
 }
 
-/** Gateway factice qui simule une erreur d’API */
+/**
+ * Gateway factice qui simule une erreur d’API.
+ */
 class FailingPokemonGateway implements PokemonGateway {
     async getRandomPokemon(): Promise<Pokemon> {
-        throw new Error("Impossible de récupérer le Pokémon.");
+        throw new Error("PokéAPI down");
     }
 }
 
 describe("Cas d’usage StartGame", () => {
-    it("doit démarrer une partie pour un joueur et retourner un Pokémon aléatoire", async () => {
+    beforeAll(() => {
+        jest.spyOn(console, "error").mockImplementation(() => { });
+    });
+    it("doit démarrer une partie pour un joueur valide et retourner un Pokémon aléatoire", async () => {
         const gateway = new FakePokemonGateway();
         const useCase = new StartGame(gateway);
 
@@ -32,26 +38,45 @@ describe("Cas d’usage StartGame", () => {
         expect(result.currentPokemon.name).toBe("pikachu");
     });
 
-    it("doit refuser de démarrer une partie sans pseudo", async () => {
+    it("doit lever une AppError.Validation si le pseudo est vide", async () => {
         const gateway = new FakePokemonGateway();
         const useCase = new StartGame(gateway);
 
+        await expect(useCase.exec("")).rejects.toThrow(AppError);
         await expect(useCase.exec("")).rejects.toThrow("Le pseudo du joueur est obligatoire.");
     });
 
-    it("doit refuser de démarrer une partie si le pseudo contient des caractères non valides", async () => {
+    it("doit lever une AppError.Validation si le pseudo est invalide", async () => {
         const gateway = new FakePokemonGateway();
         const useCase = new StartGame(gateway);
 
-        await expect(useCase.exec("Sacha 123")).rejects.toThrow();
-        await expect(useCase.exec("Sacha!")).rejects.toThrow();
-        await expect(useCase.exec("abcdefghijklmnop")).rejects.toThrow();
+        await expect(useCase.exec("Sacha 123")).rejects.toThrow(AppError);
+        await expect(useCase.exec("Sacha!")).rejects.toThrow(AppError);
+        await expect(useCase.exec("abcdefghijklmnop")).rejects.toThrow(AppError);
     });
 
-    it("doit remonter une erreur si le Pokémon ne peut pas être récupéré", async () => {
+    it("doit lever une AppError.Server si la PokéAPI échoue", async () => {
         const failingGateway = new FailingPokemonGateway();
         const useCase = new StartGame(failingGateway);
 
-        await expect(useCase.exec("Ondine")).rejects.toThrow("Impossible de récupérer le Pokémon.");
+        await expect(useCase.exec("Ondine")).rejects.toThrow(AppError);
+        await expect(useCase.exec("Ondine")).rejects.toThrow(
+            "Erreur lors de l’initialisation de la partie."
+        );
+    });
+
+    it("doit lever une AppError.NotFound si le Pokémon renvoyé est null", async () => {
+        const nullGateway: PokemonGateway = {
+            async getRandomPokemon(): Promise<Pokemon> {
+                // @ts-ignore simulation volontaire
+                return null;
+            },
+        };
+
+        const useCase = new StartGame(nullGateway);
+        await expect(useCase.exec("Brock")).rejects.toThrow(AppError);
+        await expect(useCase.exec("Brock")).rejects.toThrow(
+            "Impossible de récupérer le premier Pokémon."
+        );
     });
 });

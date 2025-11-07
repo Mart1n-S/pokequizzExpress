@@ -1,44 +1,45 @@
-import express, { Request, Response } from "express";
-import { GameController } from "src/adapters/controllers/game_controller";
-import { PokeApiGateway } from "src/adapters/gateways/pokeapi_gateway";
-import { MongoScoreRepository } from "src/frameworks/db/mongo_score_repo";
-
-// Instanciation des dépendances (gateway + repository Mongo)
-const pokemonGateway = new PokeApiGateway();
-const scoreRepository = new MongoScoreRepository();
-const gameController = new GameController(pokemonGateway, scoreRepository);
-
-// Création du router Express
-export const gameRouter = express.Router();
+import { Router, Request, Response } from "express";
+import { createGameController } from "src/frameworks/http/factories/create_game_controller";
 
 /**
- * @route GET /scores
- * Récupère les meilleurs scores.
+ * Routes HTTP du PokéQuizz.
+ *
+ * Chaque route délègue la logique au contrôleur (GameController),
+ * sans jamais instancier directement ses dépendances.
  */
-gameRouter.get("/scores", (req: Request, res: Response) =>
-    gameController.getHighScores(req, res)
-);
+const router = Router();
+const controller = createGameController();
 
 /**
- * @route POST /start
- * Démarre une nouvelle partie.
+ * Démarre une nouvelle partie
+ * POST /game/start
  */
-gameRouter.post("/start", (req: Request, res: Response) =>
-    gameController.startGame(req, res)
-);
+router.post("/start", (request: Request, response: Response) => {
+    controller.startGame(request, response);
+});
 
 /**
- * @route POST /answer
- * Soumet une réponse (bonne ou mauvaise).
+ * Vérifie la réponse du joueur
+ * POST /game/answer
  */
-gameRouter.post("/answer", (req: Request, res: Response) =>
-    gameController.submitAnswer(req, res)
-);
+router.post("/answer", (request: Request, response: Response) => {
+    controller.submitAnswer(request, response);
+});
 
 /**
- * @route POST /next
- * Tire un nouveau Pokémon différent du précédent.
+ * Récupère un nouveau Pokémon
+ * POST /game/next
  */
-gameRouter.post("/next", (req: Request, res: Response) =>
-    gameController.getNewPokemon(req, res)
-);
+router.post("/next", (request: Request, response: Response) => {
+    controller.getNewPokemon(request, response);
+});
+
+/**
+ * Récupère les meilleurs scores
+ * GET /game/scores
+ */
+router.get("/scores", (request: Request, response: Response) => {
+    controller.getHighScores(request, response);
+});
+
+export default router;

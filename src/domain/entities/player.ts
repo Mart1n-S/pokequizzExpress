@@ -1,3 +1,5 @@
+import { AppError } from "src/domain/errors/AppError";
+
 /**
  * Entité représentant un joueur de PokéQuizz.
  * 
@@ -17,11 +19,11 @@ export class Player {
      */
     constructor(name: string) {
         if (!name || name.trim() === "") {
-            throw new Error("Le pseudo du joueur est obligatoire.");
+            throw AppError.Validation("Le pseudo du joueur est obligatoire.");
         }
 
         if (!/^[A-Za-z]{1,15}$/.test(name)) {
-            throw new Error(
+            throw AppError.Validation(
                 "Le pseudo doit contenir uniquement des lettres (A-Z, a-z) et ne pas dépasser 15 caractères."
             );
         }
