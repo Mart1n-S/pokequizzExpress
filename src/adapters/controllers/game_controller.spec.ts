@@ -4,6 +4,7 @@ import { PokemonGateway } from "src/domain/ports/pokemon_gateway";
 import { ScoreRepository } from "src/domain/ports/score_repository";
 import { Pokemon } from "src/domain/entities/pokemon";
 import { Player } from "src/domain/entities/player";
+import { AppError } from "src/domain/errors/AppError";
 
 /**
  * Fausse implémentation du gateway Pokémon.
@@ -13,14 +14,16 @@ class FakePokemonGateway implements PokemonGateway {
         return new Pokemon(25, "pikachu", "https://img.pokemons.com/pikachu.png");
     }
 }
+
 /**
- * Implémentation du gateway Pokémon qui échoue.
+ * Gateway Pokémon qui échoue volontairement.
  */
 class FailingPokemonGateway implements PokemonGateway {
     async getRandomPokemon(): Promise<Pokemon> {
-        throw new Error("Impossible de récupérer le Pokémon.");
+        throw AppError.NotFound("Impossible de récupérer le Pokémon.");
     }
 }
+
 /**
  * Fausse implémentation du dépôt des scores.
  */
@@ -39,20 +42,20 @@ class FakeScoreRepository implements ScoreRepository {
     }
 }
 
-/** 
- * Implémentation du dépôt des scores qui échoue.
+/**
+ * Dépôt des scores qui échoue volontairement.
  */
 class FailingScoreRepository implements ScoreRepository {
     async saveScore(): Promise<void> {
-        throw new Error("database_error");
+        throw AppError.Server("Erreur base de données");
     }
     async getTopScores(): Promise<Player[]> {
-        throw new Error("database_error");
+        throw AppError.Server("Erreur base de données");
     }
 }
 
 /**
- * Mocks utilitaires pour simuler les objets Express.
+ * Mocks utilitaires pour simuler Express
  */
 const createMockResponse = () => {
     const response: Partial<Response> = {};
@@ -62,6 +65,11 @@ const createMockResponse = () => {
 };
 
 describe("GameController", () => {
+    beforeAll(() => {
+        jest.spyOn(console, "error").mockImplementation(() => { });
+        jest.spyOn(console, "log").mockImplementation(() => { });
+    });
+
     let controller: GameController;
     let request: Partial<Request>;
     let response: Response;
@@ -88,16 +96,19 @@ describe("GameController", () => {
         );
     });
 
-    it("doit retourner 500 pour une erreur inconnue", async () => {
+    it("doit retourner 500 pour une erreur inattendue", async () => {
         const badGateway: any = { getRandomPokemon: async () => { throw new Error("weird_error"); } };
         controller = new GameController(badGateway, new FakeScoreRepository());
         request = { body: { playerName: "Misty" } };
+
         await controller.startGame(request as Request, response);
+
         expect(response.status).toHaveBeenCalledWith(500);
         expect(response.json).toHaveBeenCalledWith(
-            expect.objectContaining({ error: "weird_error" })
+            expect.objectContaining({ error: "Erreur lors de l’initialisation de la partie." })
         );
     });
+
 
     it("doit soumettre une réponse valide et retourner le résultat", async () => {
         request = {
@@ -123,6 +134,9 @@ describe("GameController", () => {
         request = { query: {} };
         await controller.getHighScores(request as Request, response);
         expect(response.status).toHaveBeenCalledWith(500);
+        expect(response.json).toHaveBeenCalledWith(
+            expect.objectContaining({ error: "Erreur base de données" })
+        );
     });
 
     it("doit gérer une erreur lors du tirage de Pokémon", async () => {
@@ -130,6 +144,9 @@ describe("GameController", () => {
         request = { body: { previousPokemon: { id: 4, name: "charmander", imageUrl: "url" } } };
         await controller.getNewPokemon(request as Request, response);
         expect(response.status).toHaveBeenCalledWith(404);
+        expect(response.json).toHaveBeenCalledWith(
+            expect.objectContaining({ error: "Impossible de récupérer le Pokémon." })
+        );
     });
 
     it("doit renvoyer un nouveau Pokémon via getNewPokemon", async () => {

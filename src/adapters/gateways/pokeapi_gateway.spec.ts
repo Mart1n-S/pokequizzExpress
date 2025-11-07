@@ -32,7 +32,7 @@ describe("PokeApiGateway", () => {
 
         const pokemon = await gateway.getRandomPokemon();
 
-        expect(mockedAxios.get).toHaveBeenCalled(); // Vérifie que des appels axios ont été faits
+        expect(mockedAxios.get).toHaveBeenCalled();
         expect(pokemon).toBeInstanceOf(Pokemon);
         expect(["pikachu", "bulbasaur"]).toContain(pokemon.name);
     });
@@ -43,25 +43,25 @@ describe("PokeApiGateway", () => {
         (gateway as any).lastCacheUpdate = Date.now();
 
         const pokemon = await gateway.getRandomPokemon();
-        expect(mockedAxios.get).not.toHaveBeenCalled(); // Aucun appel API
+
+        expect(mockedAxios.get).not.toHaveBeenCalled();
         expect(pokemon.name).toBe("pikachu");
     });
 
-    it("ignore les Pokémon sans image", async () => {
-        (axios as any).get.mockResolvedValueOnce({
+    it("ignore les Pokémon sans image et lève une erreur si le cache final est vide", async () => {
+        mockedAxios.get.mockResolvedValueOnce({
             data: { results: [{ url: "fake-url" }] },
         });
-        (axios as any).get.mockResolvedValueOnce({
+        mockedAxios.get.mockResolvedValueOnce({
             data: { id: 999, name: "test", sprites: { front_default: null } },
         });
 
         await expect(gateway.getRandomPokemon()).rejects.toThrow(
-            "Échec de la récupération des Pokémon depuis la PokéAPI."
+            "Échec du rafraîchissement du cache Pokémon."
         );
     });
 
-
-    it("doit lever une erreur claire si la PokéAPI est inaccessible", async () => {
+    it("doit lever une erreur claire si la PokéAPI est inaccessible (ENOTFOUND)", async () => {
         mockedAxios.get.mockRejectedValueOnce({ code: "ENOTFOUND" });
 
         await expect(gateway.getRandomPokemon()).rejects.toThrow(
@@ -73,7 +73,7 @@ describe("PokeApiGateway", () => {
         mockedAxios.get.mockRejectedValueOnce(new Error("timeout"));
 
         await expect(gateway.getRandomPokemon()).rejects.toThrow(
-            "Échec de la récupération des Pokémon depuis la PokéAPI."
+            "Échec du rafraîchissement du cache Pokémon."
         );
     });
 });
