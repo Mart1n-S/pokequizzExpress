@@ -25,6 +25,12 @@ export interface GameContextType {
     gameState: GameState;
     /** Permet de modifier l’état global du jeu (comme setState) */
     setGameState: React.Dispatch<React.SetStateAction<GameState>>;
-
     resetGame: () => void;
+}
+
+/** Props du composant GameHeader */
+export interface GameHeaderProps {
+    playerName: string;
+    score: number;
+    lives: number;
 }

@@ -1,28 +1,25 @@
 import { Game } from "src/domain/entities/game";
 import { Pokemon } from "src/domain/entities/pokemon";
+import { Player } from "src/domain/entities/player";
 import { PokemonGateway } from "src/domain/ports/pokemon_gateway";
+import { ScoreRepository } from "src/domain/ports/score_repository";
 
 /**
  * Cas d’usage : vérifier la réponse du joueur.
  *
  * Compare la réponse saisie au nom du Pokémon actuel.
  * Met à jour le score et les vies en conséquence.
- * Retourne l’état du jeu et un nouveau Pokémon dans tous les cas.
- * En cas d’erreur, fournit aussi la bonne réponse.
+ * Sauvegarde le score final quand la partie est terminée.
  */
 export class SubmitAnswer {
     private pokemonGateway: PokemonGateway;
+    private scoreRepository: ScoreRepository;
 
-    constructor(pokemonGateway: PokemonGateway) {
+    constructor(pokemonGateway: PokemonGateway, scoreRepository: ScoreRepository) {
         this.pokemonGateway = pokemonGateway;
+        this.scoreRepository = scoreRepository;
     }
 
-    /**
-     * @param game Partie en cours
-     * @param currentPokemon Pokémon affiché
-     * @param playerAnswer Réponse saisie par le joueur
-     * @returns L’état mis à jour du jeu et la bonne réponse si erreur
-     */
     async exec(
         game: Game,
         currentPokemon: Pokemon,
@@ -31,35 +28,51 @@ export class SubmitAnswer {
         score: number;
         lives: number;
         isGameOver: boolean;
-        currentPokemon: Pokemon;
-        correctAnswer?: string; // présent uniquement si le joueur s’est trompé
+        currentPokemon: Pokemon | null;
+        correctAnswer?: string;
     }> {
         const normalizedAnswer = playerAnswer.trim().toLowerCase();
         const isCorrect = normalizedAnswer === currentPokemon.name.toLowerCase();
 
-        // Bonne réponse → +1 point, nouveau Pokémon
         if (isCorrect) {
             game.addPoint();
-            const newPokemon = await this.pokemonGateway.getRandomPokemon();
+        } else {
+            game.loseLife();
+        }
+
+        const isGameOver = game.isOver();
+
+        // Si la partie est finie → on enregistre le score du joueur
+        if (isGameOver) {
+            try {
+                // On crée un Player à partir du nom et du score de la partie
+                const player = new Player(game.playerName);
+                player.score = game.score;
+
+                await this.scoreRepository.saveScore(player);
+                console.log(`Score sauvegardé : ${player.name} (${player.score} pts)`);
+            } catch (error) {
+                console.error("Erreur lors de l’enregistrement du score :", error);
+            }
 
             return {
                 score: game.score,
                 lives: game.lives,
-                isGameOver: game.isOver(),
-                currentPokemon: newPokemon,
+                isGameOver: true,
+                currentPokemon: null,
+                correctAnswer: isCorrect ? undefined : currentPokemon.name,
             };
         }
 
-        // Mauvaise réponse → -1 vie, nouveau Pokémon, et on renvoie la bonne réponse
-        game.loseLife();
+        // Sinon → on renvoie le prochain Pokémon
         const nextPokemon = await this.pokemonGateway.getRandomPokemon();
 
         return {
             score: game.score,
             lives: game.lives,
-            isGameOver: game.isOver(),
+            isGameOver: false,
             currentPokemon: nextPokemon,
-            correctAnswer: currentPokemon.name,
+            correctAnswer: isCorrect ? undefined : currentPokemon.name,
         };
     }
 }

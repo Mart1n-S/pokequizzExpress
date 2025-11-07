@@ -6,11 +6,7 @@ import { usePathname } from "next/navigation";
 export function Header() {
   const pathname = usePathname();
 
-  const navLinks = [
-    { href: "/", label: "Accueil" },
-    { href: "/game", label: "Jouer" },
-    { href: "/gameover", label: "Scores" },
-  ];
+  const navLinks = [{ href: "/", label: "Accueil" }];
 
   return (
     <header className="w-full bg-white border-b border-gray-200 shadow-sm">

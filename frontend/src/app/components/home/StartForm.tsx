@@ -46,14 +46,25 @@ export default function StartForm() {
   };
 
   return (
-    <section className="w-full max-w-md mt-10 bg-white rounded-xl shadow p-6 text-center border border-gray-200">
+    <section
+      className="w-full max-w-md mt-10 bg-white rounded-xl shadow p-6 text-center border border-gray-200"
+      id="game"
+    >
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Prêt à jouer ?</h2>
       <p className="text-gray-600 mb-6">
         Entrez votre pseudo pour commencer le PokéQuizz !
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
+        <label
+          htmlFor="playerName"
+          className="self-start text-sm font-medium text-gray-700"
+        >
+          Pseudo
+        </label>
         <input
+          id="playerName"
+          name="playerName"
           type="text"
           placeholder="Votre pseudo"
           value={playerName}
@@ -68,7 +79,7 @@ export default function StartForm() {
 
         <button
           type="submit"
-          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg shadow-sm"
+          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg shadow-sm hover:cursor-pointer"
         >
           Commencer la partie
         </button>

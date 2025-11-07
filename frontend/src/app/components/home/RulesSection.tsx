@@ -14,7 +14,10 @@ import {
  */
 export default function RulesSection() {
   return (
-    <section className="w-full bg-blue-50 py-16 px-6 rounded-3xl shadow-inner border border-blue-200 text-gray-800 mt-10">
+    <section
+      className="w-full bg-blue-50 py-16 px-6 rounded-3xl shadow-inner border border-blue-200 text-gray-800 mt-10"
+      id="rules"
+    >
       <div className="max-w-4xl mx-auto text-center space-y-8">
         {/* Titre */}
         <h2 className="text-4xl md:text-5xl font-extrabold text-blue-600">

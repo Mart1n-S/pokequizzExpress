@@ -77,7 +77,8 @@ export class GameController {
                 currentPokemon.imageUrl
             );
 
-            const useCase = new SubmitAnswer(this.pokemonGateway);
+            // On injecte maintenant le scoreRepository
+            const useCase = new SubmitAnswer(this.pokemonGateway, this.scoreRepository);
             const result = await useCase.exec(gameEntity, pokemonEntity, playerAnswer);
 
             response.status(200).json(result);

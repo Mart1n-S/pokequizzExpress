@@ -50,6 +50,23 @@ export default function HeroSection() {
           Attrape-les tous ! Teste tes connaissances Pokémon et deviens le
           meilleur Dresseur !
         </p>
+        {/* Boutons: Jouer / Règles */}
+        <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+          <a
+            href="#game"
+            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition"
+            aria-label="Aller à la section jeu"
+          >
+            Jouer
+          </a>
+          <a
+            href="#rules"
+            className="inline-block px-6 py-3 bg-gray-200 text-gray-800 rounded-md font-semibold hover:bg-gray-300 transition"
+            aria-label="Aller à la section règles"
+          >
+            Règles
+          </a>
+        </div>
       </div>
     </section>
   );
