@@ -1,11 +1,11 @@
 import express, { Request, Response } from "express";
 import { GameController } from "src/adapters/controllers/game_controller";
 import { PokeApiGateway } from "src/adapters/gateways/pokeapi_gateway";
-import { MemoryScoreRepository } from "src/frameworks/db/memory_score_repo";
+import { MongoScoreRepository } from "src/frameworks/db/mongo_score_repo";
 
-// Instanciation des dépendances
+// Instanciation des dépendances (gateway + repository Mongo)
 const pokemonGateway = new PokeApiGateway();
-const scoreRepository = new MemoryScoreRepository();
+const scoreRepository = new MongoScoreRepository();
 const gameController = new GameController(pokemonGateway, scoreRepository);
 
 // Création du router Express
