@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Pokemon } from "src/domain/entities/pokemon";
 import { PokemonGateway } from "src/domain/ports/pokemon_gateway";
+import { config } from "src/frameworks/config/config";
 
 /**
  * Gateway concret pour la PokéAPI.
@@ -15,7 +16,7 @@ export class PokeApiGateway implements PokemonGateway {
     private cache: Pokemon[] = [];
     private lastCacheUpdate = 0;
     private readonly cacheDurationMs = 60 * 60 * 1000; // 1 heure
-    private readonly apiUrl = process.env.POKEAPI_URL || "https://pokeapi.co/api/v2/pokemon";
+    private readonly apiUrl = config.pokeApiUrl;
     private readonly maxCacheSize = 1000;
 
     /**
