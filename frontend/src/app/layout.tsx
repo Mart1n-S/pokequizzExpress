@@ -15,6 +15,10 @@ import { GameContextProvider } from "@/context/GameContext";
 export const metadata: Metadata = {
   title: "PokéQuizz",
   description: "Le quiz Pokémon — devine-les tous !",
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+  },
 };
 
 export default function RootLayout({
