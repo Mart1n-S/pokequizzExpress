@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body
-        className="min-h-screen flex flex-col bg-linear-to-b from-slate-900 to-indigo-950 text-gray-100
+        className="min-h-screen flex flex-col bg-linear-to-b from-slate-50 to-indigo-50 text-gray-900
                    font-sans selection:bg-yellow-400 selection:text-black"
       >
         {/* Fournit le contexte global du jeu */}

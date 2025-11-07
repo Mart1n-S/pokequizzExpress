@@ -70,7 +70,7 @@ export default function RulesSection() {
             </h3>
             <p className="text-sm text-gray-600 text-center">
               Atteins le top du classement et prouve que tu es le meilleur
-              Dresseur !
+              Dresseur ! Seul les 10 meilleurs seront affichés.
             </p>
           </li>
         </ul>

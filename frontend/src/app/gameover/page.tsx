@@ -36,7 +36,7 @@ export default function GameOverPage() {
       <div className="flex gap-4">
         <button
           onClick={() => router.push("/")}
-          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow transition"
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow transition hover:cursor-pointer"
         >
           Voir le classement
         </button>

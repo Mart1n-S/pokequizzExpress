@@ -34,6 +34,9 @@ export default function ScoreBoard() {
       <h2 className="text-2xl font-bold text-gray-800 mb-4">
         🏆 Meilleurs Scores
       </h2>
+      <p className="text-sm text-gray-500 italic mb-3">
+        Remarque : le tableau affiche uniquement les 10 meilleurs scores.
+      </p>
 
       {loading ? (
         <p className="text-gray-500">Chargement du classement...</p>

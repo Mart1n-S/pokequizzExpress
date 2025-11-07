@@ -61,7 +61,7 @@ export default function AnswerForm({ onSubmit }: AnswerFormProps) {
       <button
         type="submit"
         disabled={loading}
-        className={`w-full py-2 rounded-md font-semibold text-white transition ${
+        className={`w-full py-2 rounded-md font-semibold text-white transition hover:cursor-pointer ${
           loading
             ? "bg-gray-400 cursor-not-allowed"
             : "bg-blue-600 hover:bg-blue-700"
