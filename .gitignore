@@ -5,7 +5,7 @@ coverage/
 
 ## Environment
 .env
-.env.*
+.env.local
 
 ## Logs
 npm-debug.log*
@@ -31,3 +31,5 @@ yarn.lock
 .cache/
 .nyc_output/
 
+# Brouillon de fichiers à ignorer
+brouillon.md

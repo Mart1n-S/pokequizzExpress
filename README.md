@@ -1,6 +1,6 @@
-# PokeQuiz
+# PokéQuizz
 
-Petit projet PokéQuiz (Clean Architecture + TDD) — minimal README pour lancer le projet.
+Petit projet PokéQuizz (Clean Architecture + TDD) — minimal README pour lancer le projet.
 
 Prerequis
 - Node.js 18+ recommandé
