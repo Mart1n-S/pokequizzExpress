@@ -1,23 +1,20 @@
 import { GameState, Pokemon } from "@/types/game";
 import { Score } from "@/types/score";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-
 /**
- * Récupère la liste des meilleurs scores depuis le backend
+ * Récupère les meilleurs scores depuis le backend (via Next API)
  */
 export async function getHighScores(): Promise<Score[]> {
-    const res = await fetch(`${API_URL}/game/scores`);
+    const res = await fetch(`/api/game/scores`);
     if (!res.ok) throw new Error("Erreur lors du chargement des scores");
     return res.json();
 }
 
 /**
  * Démarre une nouvelle partie pour un joueur
- * Retourne l’état initial du jeu (GameState)
  */
 export async function startGame(playerName: string): Promise<GameState> {
-    const res = await fetch(`${API_URL}/game/start`, {
+    const res = await fetch(`/api/game/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ playerName }),
@@ -30,10 +27,8 @@ export async function startGame(playerName: string): Promise<GameState> {
 /**
  * Récupère un nouveau Pokémon (optionnellement en excluant le précédent)
  */
-export async function getNewPokemon(
-    previousPokemon?: Pokemon
-): Promise<Pokemon> {
-    const res = await fetch(`${API_URL}/game/new-pokemon`, {
+export async function getNewPokemon(previousPokemon?: Pokemon): Promise<Pokemon> {
+    const res = await fetch(`/api/game/next`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ previousPokemon }),
@@ -51,7 +46,7 @@ export async function submitAnswer(
     currentPokemon: Pokemon,
     playerAnswer: string
 ): Promise<GameState> {
-    const res = await fetch(`${API_URL}/game/answer`, {
+    const res = await fetch(`/api/game/answer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ game, currentPokemon, playerAnswer }),
